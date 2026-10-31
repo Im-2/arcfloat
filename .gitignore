@@ -1,0 +1,6 @@
+.env*
+*.key
+.arc-studio/
+node_modules/
+PLAN.md
+PLAN*.md
