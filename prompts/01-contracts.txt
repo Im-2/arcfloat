@@ -1,0 +1,42 @@
+Build a Solidity smart contract system on Arc for "Arcfloat", USDC invoice advances with co-funding. Use Foundry (contracts under contracts/, tests alongside). Do not deploy yet: this turn is contracts and tests only.
+
+PRODUCT SPEC
+
+Roles: Freelancer (payee), Client (payer, designated per invoice), Funders (any address, several allowed per invoice).
+
+Core flow (Layer 0):
+1. Freelancer creates an invoice: client, faceAmount (USDC), dueDate, discountBps.
+2. Advance target = faceAmount * (10000 - discountBps) / 10000.
+3. A funder deposits USDC toward that target. When fully funded, the advance is released to the freelancer.
+4. The client pays the full faceAmount into the contract.
+5. Funders are repaid pro rata from that payment. The freelancer gets whatever remains. Invoice is marked Paid.
+
+Co-funding (Layer 1):
+- Multiple funders may each fund a slice. A slice is capped at the remaining target.
+- Repayment is pro rata by contribution: funderShare = faceAmount * contribution / advanceTarget, rounded down. Any rounding dust goes to the last claimant.
+- Funders can withdraw their contribution while the invoice is still not fully funded.
+
+Rules:
+- Amounts in USDC base units (6 decimals), always through the USDC ERC-20 interface (transferFrom/transfer/balanceOf). Never use msg.value or native balances: on Arc USDC is also the native gas token and its native balance may use different decimals from the ERC-20 interface (check the Arc docs and state what you found), so the contract must not be payable. Do not hardcode the USDC address from memory. Use the canonical USDC on Arc, look it up, and make the token address a constructor parameter so the same contract works on testnet and mainnet.
+- Only the designated client can pay. Full amount only. The client must approve the allowance first.
+- Bounds: discountBps between 50 and 2000. Minimum face amount 1 USDC. Minimum contribution 0.01 USDC. Max 10 funders per invoice.
+- Non-recourse: if the client never pays, funders bear the loss.
+- Pull-based claims. After payment, funders (and the freelancer) call a claim function. A single failing recipient, for example a USDC-blacklisted address, must never block the others.
+- Freelancer can cancel while the invoice is not fully funded. All contributions become refundable.
+- If the client pays before the invoice is fully funded, the freelancer receives the full amount and every partial contribution becomes refundable.
+- Reentrancy protection, safe ERC-20 transfers, events for every state change, no admin keys or upgradeability, no fees.
+
+States: Open -> Funded -> Paid, plus Cancelled. After dueDate, an unpaid funded invoice can be marked Defaulted by anyone (record only, no payout change).
+
+REQUIRED TESTS (write them, run them, fix failures until all pass):
+- Create invoice: valid and every invalid parameter
+- Single funder funds the full target; advance reaches the freelancer
+- Two funders co-fund; over-funding is capped; contribution withdrawal before Funded
+- Client pays; pro rata claims are correct; dust handling; claim twice fails
+- Wrong payer fails; double payment fails; payment with insufficient allowance fails
+- Pay-before-funded path: freelancer paid, partial contributions refundable
+- Cancel path and refunds; default marking after dueDate
+- A claim by a non-entitled address fails
+- Fuzz or property test: contract balance always equals the sum of outstanding obligations
+
+Report the full test output, the USDC address you found for Arc testnet and Arc mainnet with the source, and list every contract and its public functions.

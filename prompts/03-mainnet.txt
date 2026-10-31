@@ -1,0 +1,1 @@
+Prepare the Arcfloat contracts for Arc mainnet. List exactly what the human must sign and in what order, the constructor/config values (including the canonical mainnet USDC address and how you verified it), and the post-deploy verification steps on explorer.arc.io. Do not hold or request any private key.

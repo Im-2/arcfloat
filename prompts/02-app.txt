@@ -1,0 +1,13 @@
+Build a web app for the Arcfloat contracts already in this project.
+
+APP SPEC
+
+Screens, kept simple:
+1. Create invoice. Client address, amount, due date, discount. Shows the advance the freelancer will receive.
+2. Invoice page (shareable link). Status, parties, amounts, funding progress bar, funder list, "Fund" button, "Pay" button for the client, "Claim" button, explorer links for each transaction.
+3. Open invoices. A list funders can browse, showing yield (discount / advance) and days to due date.
+4. My activity. Invoices I created, funded or owe, with claimable balances.
+
+Wallet connection, clear transaction states (approve, then action), a visible network indicator (show "Arc Mainnet" or "Arc Testnet" from the connected chain), and a risk note: "Funders bear non-payment risk. Contracts are not audited." No admin panel. Every successful action shows its tx hash linked to explorer.arc.io.
+
+It must call the real contracts. Keep the contract address and network in one config file so we can switch to mainnet later. Preview it, test the full flow (create, fund with two wallets, pay, claim) on testnet, and fix any bug found. Report which flows you verified.
